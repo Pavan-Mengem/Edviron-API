@@ -4,13 +4,25 @@ import { Transaction } from "../models/transaction.model.js";
 // Get All Transaction
 export const GetAllTransaction = async (req, res) => {
   try {
-   const transactions = await Transaction.find();
-    res.status(200).json(transactions);
+    const transactions = await Transaction.find();
+    const transactionStatuses = await TransactionStatus.find();
+
+    const combinedData = transactions.map(transaction => {
+      const status = transactionStatuses.find(status => status.custom_order_id === transaction.custom_order_id);
+      return {
+        ...transaction.toObject(),
+        status: status ? status.status : null,
+        payment_method: status ? status.payment_method : null,
+        gateway: status ? status.gateway : null,
+        bank_reference: status ? status.bank_reference : null,
+      };
+    });
+
+    res.status(200).json(combinedData);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-}
-
+};
 
 // Get Transaction By School Id
 export  const GetTransctionBySchool = async (req, res) => {
